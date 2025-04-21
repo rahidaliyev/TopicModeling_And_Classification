@@ -10,6 +10,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import Normalizer
 from ReadDoc import read_doc
 import win32com.client
+from sklearn.cluster import KMeans
 
 # 2. Tokenləşdirmə (fraqmentlərə ayırmaq)
 def get_candidate_keywords(text, ngram_range=(1, 3), stop_words='english'):
@@ -17,7 +18,7 @@ def get_candidate_keywords(text, ngram_range=(1, 3), stop_words='english'):
     return vectorizer.get_feature_names_out()
 
 # 3. Açar söz çıxarma (BERT + cosine similarity)
-def extract_keywords(text, top_n=10):
+def extract_keywords(text, top_n=100):
     model = SentenceTransformer('distilbert-base-nli-mean-tokens')
     
     # Əsas mətni vektor halına sal
@@ -37,25 +38,10 @@ def extract_keywords(text, top_n=10):
 # === Test ===
 # file_path = r"C:\\Users\\rahid\\Documents\\projects\\advanced_machine_learning\\BERTZ\\text_files\\Alcohol.doc"
 file_paths = [
-    r"C:\\Users\\rahid\\Documents\\projects\\advanced_machine_learning\\BERTZ\\text_files\\Alcohol.doc",
-    r"C:\\Users\\rahid\\Documents\\projects\\advanced_machine_learning\\BERTZ\\text_files\\DVI.doc",
-    r"C:\\Users\\rahid\\Documents\\projects\\advanced_machine_learning\\BERTZ\\text_files\\Forensic_Paternity.doc"
+    r"C:\Users\rahid\Documents\projects\advanced_machine_learning\TopicModeling_And_Classification\TopicModeling_And_Classification\text_files\Alcohol.doc",
+    r"C:\Users\rahid\Documents\projects\advanced_machine_learning\TopicModeling_And_Classification\TopicModeling_And_Classification\text_files\DVI.doc",
+    r"C:\Users\rahid\Documents\projects\advanced_machine_learning\TopicModeling_And_Classification\TopicModeling_And_Classification\text_files\Forensic_Paternity.doc"
 ]
-
-#label-ləri yığmaq üçün kod
-def extract_headings_doc(file_path):
-    word = win32com.client.Dispatch("Word.Application")
-    word.Visible = False
-    doc = word.Documents.Open(file_path)
-    headings = []
-
-    for paragraph in doc.Paragraphs:
-        text = paragraph.Range.Text.strip()
-        if text.isupper() and len(text.split()) < 10:
-            headings.append(text)
-    doc.Close()
-    word.Quit()
-    return headings
 
 #feature ve labellerin append edilmesi
 keywords_list = []
@@ -65,14 +51,14 @@ for file_path in file_paths:
     keywords = extract_keywords(text)
     keywords_list.append(keywords)
     
-    headings = extract_headings_doc(file_path)
-    labels.extend(headings)
+    # headings = extract_headings_doc(file_path)
+    # labels.extend(headings)
     
     print(f"\n Fayl: {os.path.basename(file_path)}")
     print(f"Fatures: {keywords}")
-    print("Label-lar):")
-    for heading in headings:
-        print(" -", heading)
+    # print("Label-lar):")
+    # for heading in headings:
+    #     print(" -", heading)
     
 # Classifier 
 model = SentenceTransformer('distilbert-base-nli-mean-tokens')
@@ -83,17 +69,31 @@ keyword_vectors_combined = [np.mean(keywords, axis=0) for keywords in keyword_ve
 
 
 # Fayl etiketləri (məsələn, Alcohol, DVI, Forensic Paternity)
+# labels = []
 # labels = ['Alcohol', 'DVI', 'Forensic_Paternity']
 
 # BERT ilə əldə edilmiş açar söz vektorları
 X = np.array(keyword_vectors_combined)
+
+#clusterlemek hissesi
+
+# n_clusters = 3
+# kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+# clusters = kmeans.fit_predict(X)
+# cluster_counts = np.bincount(clusters)
+# small_clusters = np.where(cluster_counts == 1)[0]
+
+# Bu zaman "label-lar" əvəzinə "cluster" nomrələrini istifadə edirik
+labels = ['Alcohol', 'DVI', 'Forensic_Paternity']
+
+
 
 # 🔄 Normallaşdırma
 scaler = Normalizer()
 X_scaled = scaler.fit_transform(X)
 
 # Train-test bölməsi
-X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.3, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, labels, test_size=0.3, random_state=42)
 
 # Model qurmaq Logistic Regression
 model = LogisticRegression(max_iter=1000)  # BERT embedding-lər üçün max_iter artırmaq faydalı olur
