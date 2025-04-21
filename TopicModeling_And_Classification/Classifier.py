@@ -20,4 +20,3 @@
 # import numpy as np
 # keyword_vectors_combined = [np.mean(keywords, axis=0) for keywords in keyword_vectors]
 
-# # İndi hər açar söz vektorunun təmsil etdiyi mövzu və ya faylın xüsusiyyətlərini ehtiva edən bir vektor olacaq
