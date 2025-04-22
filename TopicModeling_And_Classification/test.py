@@ -1,4 +1,5 @@
 # Lazımi kitabxanalar
+from sentence_transformers import SentenceTransformer
 from sklearn.svm import SVC
 import win32com.client
 import pandas as pd
@@ -45,8 +46,8 @@ X_lda = lda.fit_transform(X_tfidf)
 
 # ================================
 # BERT embeddings
-# model_bert = SentenceTransformer('all-MiniLM-L6-v2')
-# X_bert = model_bert.encode(df["text"], show_progress_bar=True)
+model_bert = SentenceTransformer('all-MiniLM-L6-v2')
+X_bert = model_bert.encode(df["text"], show_progress_bar=True)
 
 # ================================
 # Klassifikasiya funksiyası
@@ -70,12 +71,12 @@ def train_and_evaluate_SVM(X, y, title):
 # Nəticələri yoxla
 train_and_evaluate_LR(X_tfidf, df["label"], "TF-IDF with Linear Regression")
 train_and_evaluate_LR(X_lda, df["label"], "LDA with Linear Regression")
-# train_and_evaluate(X_bert, df["label"], "BERT")
+train_and_evaluate_LR(X_bert, df["label"], "BERT with Linear Regression")
 
 # Nəticələri yoxla
 train_and_evaluate_SVM(X_tfidf, df["label"], "TF-IDF with SVM")
 train_and_evaluate_SVM(X_lda, df["label"], "LDA with SVM")
-# train_and_evaluate(X_bert, df["label"], "BERT")
+train_and_evaluate_SVM(X_bert, df["label"], "BERT with SVM")
 
 
 
